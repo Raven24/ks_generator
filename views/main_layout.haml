@@ -1,0 +1,24 @@
+!!!
+%html
+  %head
+    %meta{charset: 'utf-8'}
+    %meta{'http-equiv'=>'X-UA-Compatible', :content=>'IE=edge'}
+    %meta{name: :viewport, content: 'width=device-width, initial-scale=1'}
+
+    %title
+      Kickstart Config Generator
+
+    %link{rel: :stylesheet, type: 'text/css', href: 'css/bootstrap.css'}
+    %link{rel: :stylesheet, type: 'text/css', href: 'assets/_theme.css'}
+    %link{rel: :stylesheet, type: 'text/css', href: 'assets/style.css'}
+  %body
+    %nav{id: :header, class:'navbar navbar-default'}
+      %div{class: :container}
+        %div{class: 'navbar-header'}
+          %a{class: 'navbar-brand', href: '/'}
+            Kickstart Config Generator
+            %small
+              for Fedora
+
+    %div{id: :content, class: :container}
+      = yield

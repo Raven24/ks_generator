@@ -1,0 +1,33 @@
+
+div.form_group {
+  padding: .3em 2em;
+
+  label {
+    display: block;
+    font-weight: normal;
+  }
+
+  .columns {
+    -moz-column-count: 2; -moz-column-gap: 2em;
+    -webkit-column-count: 2; -webkit-column-gap: 2em;
+    column-count: 2; column-gap: 2em;
+  }
+
+  .group_header {
+    font-weight: bold;
+    margin-top: 1em;
+  }
+}
+
+div.ks_form {
+  width: 88%;
+  margin: 0 auto;
+
+  h3 {
+    background: #FAFAFA;
+    border-bottom: 1px solid #EEE;
+    padding: .4em 1.5em .3em;
+    margin: .5em 0 .3em;
+    border-radius: 4px 4px 0 0;
+  }
+}

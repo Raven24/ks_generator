@@ -1,0 +1,64 @@
+
+%link{rel: :stylesheet, type: 'text/css', href: 'assets/form.css'}
+
+%div.ks_form
+  %form{method: :post, action: 'create'}
+    /
+      %h3
+        Hardware detection
+        %small
+          (Anaconda Options)
+      %div.form_group
+        = haml :_form_hw
+
+    %h3
+      Authentication
+    %div.form_group
+      = haml :_form_auth
+
+    %h3
+      Partitioning
+    %div.form_group
+      = haml :_form_part
+
+    %h3
+      Firewall
+    %div.form_group
+      = haml :_form_fw
+
+    %h3
+      Language
+    %div.form_group
+      = haml :_form_lang
+
+    %h3
+      Additional repos
+    %div.form_group
+      = haml :_form_repos
+
+    %h3
+      SELinux
+    %div.form_group
+      = haml :_form_selinux
+
+    %h3
+      Package groups
+    %div.form_group
+      = haml :_form_pkg
+
+    /
+      %h3
+        Pre-install script
+      %div.form_group
+        = haml :_form_pre
+
+    /
+      %h3
+        Post-install script
+      %div.form_group
+        = haml :_form_post
+
+    %hr
+
+    %button.btn.btn-primary{type: :submit}
+      Create

@@ -1,0 +1,12 @@
+
+%label{for: 'usernames'}
+  Usernames
+  %small
+    (No special characters, one name per line)
+%textarea#usernames{name: 'auth[users]', cols: 30, rows: 2}
+
+= checkbox('ks[auth[useshadow]]', 'Use shadow passwords', true)
+
+= radio_group('ks[auth[passalgo]]', 'Hashing algorithm',
+    [{text: 'SHA-256', value: 'sha256'},
+     {text: 'SHA-512', value: 'sha512', checked: true}])

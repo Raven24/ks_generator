@@ -1,0 +1,44 @@
+
+@font-face {
+  font-family: 'lato';
+  src: url('../fonts/lato-reg-webfont.eot');
+  src: url('../fonts/lato-reg-webfont.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/lato-reg-webfont.woff') format('woff'),
+       url('../fonts/lato-reg-webfont.ttf') format('truetype'),
+       url('../fonts/lato-reg-webfont.svg#latoregular') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'aaargh';
+  src: url('../fonts/Aaargh-webfont.eot');
+  src: url('../fonts/Aaargh-webfont.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/Aaargh-webfont.woff') format('woff'),
+       url('../fonts/Aaargh-webfont.ttf') format('truetype'),
+       url('../fonts/Aaargh-webfont.svg#aaarghnormal') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+html {
+  font-size: 82%;
+}
+
+body {
+  font-family: 'lato', 'Arial', 'Verdana', sans;
+  font-size: 1em;
+  background: #FCFCFC;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'aaargh', 'Helvetica', 'Verdana', 'Arial', sans;
+}
+
+#content {
+  border: 1px solid #F1F1F1;
+  background: #FFF;
+  padding: 1em 1.2em 2em;
+
+}
+

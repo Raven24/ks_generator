@@ -1,0 +1,6 @@
+
+= check_group('RPMFusion Repos',
+    [{text:'Include RPM Fusion repo (free)', name:'ks[repo[rpmfusion_free]]', checked: true},
+     {text:'Include RPM Fusion repo (free, updates)', name:'ks[repo[rpmfusion_free_updates]]', checked: true},
+     {text:'Include RPM Fusion repo (nonfree)', name:'ks[repo[rpmfusion_nonfree]]'},
+     {text:'Include RPM Fusion repo (nonfree, updates)', name:'ks[repo[rpmfusion_nonfree_updates]]'}])

@@ -1,0 +1,17 @@
+
+= radio_group('ks[lang]', 'System Language',
+    [{text:'English (US)', value:'en_US'},
+     {text:'English (GB)', value:'en_GB'},
+     {text:'Deutsch (DE)', value:'de_DE'},
+     {text:'Deutsch (AT)', value:'de_AT', checked: true}])
+
+= radio_group('ks[keyboard]', 'Keyboard Layout',
+    [{text:'English', value:'us'},
+     {text:'Deutsch', value:'de', checked: true}])
+
+= dropdown('ks[timezone[_]]', 'Timezone',
+    [{text:'America/New York', value:'America/New York'},
+     {text:'Europe/Vienna', value:'Europe/Vienna', selected: true},
+     {text:'US/Hawaii', value:'US/Hawaii'}])
+
+= checkbox('ks[timezone[utc]]', 'Hardware Clock is UTC', true)

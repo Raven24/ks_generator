@@ -1,0 +1,36 @@
+
+%h2
+  %div.pull-right
+    %a.btn.btn-primary{href: url("/#{uid}.cfg")}
+      Raw
+  = snippet_title
+
+%p
+  Your generated passwords
+  %small
+    (Make sure to change them, on your first login!)
+
+%pre= password_list(users)
+
+%p
+  You are now ready to use your generated Configuration to set up a
+  Fedora installation.
+
+%p
+  Simply append the
+  %code
+    ks
+  parameter to your boot options when installing Fedora, just like this:
+
+%pre
+  = "[...] ks=#{url("/#{uid}.cfg")}"
+
+%p
+  In case there are any uncertainties left, see the
+  %a{href: 'https://docs.fedoraproject.org/en-US/Fedora/20/html/Installation_Guide/ch-kickstart2.html'}
+    Fedora Docs for Kickstart
+  or
+  %a{href: 'https://fedoraproject.org/wiki/Anaconda/Kickstart'}
+    their Wiki
+
+%pre= ks
