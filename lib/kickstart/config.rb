@@ -196,14 +196,16 @@ class Kickstart::Config
     end
   end
 
-  def set_pre(opt)
-    return if opt.empty?
-    @options[:pre] = opt
+  [:pre, :post].each do |sec|
+    define_method "set_#{sec}" do |opt|
+      return if opt.empty?
+      @options[:pre] = Util::clean_lineendings(opt)
+    end
   end
 
   def set_post(opt)
     return if opt.empty?
-    @options[:post] = opt
+    @options[:post] = Util::clean_lineendings(opt)
   end
 
   def users

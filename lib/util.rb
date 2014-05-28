@@ -20,5 +20,9 @@ module Util
       # don't use 0 or O ... too confusing
       Array.new(length){[*'1'..'9', *'a'..'z', *'A'..'N', *'P'..'Z'].sample}.join
     end
+
+    def clean_lineendings(string)
+      string.gsub(/\r\n?/, "\n")
+    end
   end
 end
