@@ -274,7 +274,9 @@ class Kickstart::Config
     sec_cmd = section
     sec_cmd = make_cmd(section, {log: '/root/ks-post.log'}) if section == :post
 
-    ["%#{sec_cmd}", @options[section]].join("\n")
+    ["%#{sec_cmd}",
+     @options[section],
+     '%end'].join("\n")
   end
 
   class InvalidParameter < StandardError; end
