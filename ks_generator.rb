@@ -2,82 +2,8 @@ require 'sinatra/base'
 
 require 'i18n'
 require 'i18n/backend/fallbacks'
+require File.join(File.dirname(__FILE__), 'lib', 'ks_generator')
 
-lib_dir = File.join(File.dirname(__FILE__), 'lib')
-
-require File.join(lib_dir, 'util')
-require File.join(lib_dir, 'kickstart_config')
-require File.join(lib_dir, 'storage')
-
-module FormHelpers
-  def checkbox(name, text, checked=false, fmt=:haml)
-    output = <<-END
-%input{type: :hidden, name: '#{name}', value: 0 }
-%label
-  %input{type: :checkbox, name: '#{name}', value: 1, checked: #{(checked ? 'true' : 'false')} }
-  #{text}
-    END
-
-    return output if fmt==:raw
-    haml output
-  end
-
-  def check_group(text, options)
-    check_options = options.map do |entry|
-      checkbox(entry[:name], entry[:text], entry[:checked], :raw)
-    end.join("\n")
-
-    haml <<-END
-%div.group_header
-  #{text}
-
-%div.columns
-  #{check_options.split("\n").join("\n  ")}
-    END
-  end
-
-  def radio_group(name, text, options)
-    radio_options = options.map do |entry|
-      <<-END
-%label
-  %input{type: :radio, name: '#{name}', value: '#{entry[:value]}', checked: #{(entry[:checked] ? 'true' : 'false')} }
-  #{entry[:text]}
-      END
-    end.join("\n")
-
-    haml <<-END
-%div.group_header
-  #{text}
-#{radio_options}
-    END
-  end
-
-  def dropdown(name, text, options)
-    select_options = options.map do |entry|
-      <<-END
-    %option{value: '#{entry[:value]}', selected: #{entry[:selected] ? 'true' : 'false'} }
-      #{entry[:text]}
-      END
-    end.join("\n")
-
-    haml <<-END
-%label
-  #{text}
-  %select{name: '#{name}'}
-#{select_options}
-    END
-  end
-end
-
-module SnippetHelpers
-  def snippet_title
-    session.delete(:fresh) ? "Congratulations, we're done." : "Your Kickstart Config"
-  end
-
-  def password_list(usrs)
-    usrs.map { |u| "#{u[:name].ljust(10)}: #{u[:password]}" }.join("\n")
-  end
-end
 
 class KsGenerator < Sinatra::Base
   configure do
@@ -86,7 +12,7 @@ class KsGenerator < Sinatra::Base
     set :haml, format: :html5
     set :scss, views: File.join(settings.root, 'assets')
 
-    helpers FormHelpers, SnippetHelpers
+    helpers Helpers::Form, Helpers::Snippet
 
     I18n::Backend::Simple.send(:include, I18n::Backend::Fallbacks)
     I18n.load_path = Dir[File.join(settings.root, 'locales', '*.yml')]
@@ -123,7 +49,7 @@ class KsGenerator < Sinatra::Base
     }
 
     # set root password
-    ks_params['rootpw'] = KickstartConfig.generate_root_pw
+    ks_params['rootpw'] = Kickstart::Config.generate_root_pw
 
     # configure what to do with existing partitions
     ks_params['clearpart'] = {
@@ -133,10 +59,10 @@ class KsGenerator < Sinatra::Base
 
     # process users
     ks_params['user'] = params[:auth][:users].split("\n").map do |u|
-      {name: u.strip, password: KickstartConfig.generate_user_pw }
+      {name: u.strip, password: Kickstart::Config.generate_user_pw }
     end
 
-    ks = KickstartConfig.from_hash(ks_params)
+    ks = Kickstart::Config.from_hash(ks_params)
     uid = Storage.next_uid
 
     Storage.set(uid, ks)

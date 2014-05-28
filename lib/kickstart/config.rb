@@ -1,9 +1,12 @@
 
-class KickstartConfig
+class Kickstart::Config
 
-  ATTRIBUTES = [:install, :url, :auth, :user, :clearpart, :autopart, :bootloader, :firewall, :lang, :keyboard, :timezone, :selinux, :rootpw, :repo]
+  ATTRIBUTES = [
+    :install, :url, :auth, :user, :clearpart, :autopart, :bootloader, :firewall,
+    :lang, :keyboard, :timezone, :selinux, :rootpw, :repo
+  ]
 
-  OPTIONS = [:pkg]
+  OPTIONS = [:pkg, :pre, :post]
 
   KNOWN_REPOS = {
     rpmfusion_free: {
@@ -28,6 +31,16 @@ class KickstartConfig
     },
   }
 
+  OPTS_SELINUX = ['enforcing', 'permissive', 'disabled']
+
+  OPTS_FIREWALL = ['disabled', 'enabled']
+
+  OPTS_BOOTLOADER = ['mbr', 'partition', 'none']
+
+  OPTS_AUTOPART = ['lvm', 'btrfs', 'thinp', 'plain']
+
+  OPTS_PASSALGO = ['sha256', 'sha512']
+
   KNOWN_PKG_GROUPS = [
     'c-development', 'development-tools', 'development-libs', 'firefox',
     'ruby', 'python', 'perl', 'php', 'admin-tools', 'system-tools',
@@ -40,9 +53,21 @@ class KickstartConfig
     'redis', 'mariadb-devel', 'nodejs', 'postfix'
   ]
 
+  KNOWN_TIMEZONES = [
+    'Africa/Cairo', 'Africa/Dakar', 'Africa/Johannesburg', 'America/Chicago',
+    'America/Costa_Rica', 'America/New York', 'Asia/Tokyo', 'Asia/Baghdad',
+    'Asia/Bangkok', 'Asia/Dubai', 'Australia/Sydney', 'Europe/Amsterdam',
+    'Europe/Kiev', 'Europe/Moscow', 'Europe/Rome', 'Europe/Vienna', 'Europe/Zurich',
+    'Pacific/Honolulu', ''
+  ]
+
+  KNOWN_LANGUAGES = [
+    'de_DE', 'de_AT', 'en_US', 'en_GB', 'es_ES', 'fr_FR'
+  ]
+
   class << self
     def from_hash(opts)
-      KickstartConfig.new do |ks|
+      Kickstart::Config.new do |ks|
         (ATTRIBUTES + OPTIONS).each do |attr|
           ks.send("set_#{attr}", opts[attr.to_s]) if opts.has_key?(attr.to_s)
         end
@@ -83,14 +108,14 @@ class KickstartConfig
   def set_auth(opts)
     @options[:auth] ||= {}
     @options[:auth][:useshadow] = true if opts['useshadow'] == '1'
-    @options[:auth][:passalgo] = opts['passalgo'] if ['sha256', 'sha512'].include?(opts['passalgo'])
+    @options[:auth][:passalgo] = opts['passalgo'] if OPTS_PASSALGO.include?(opts['passalgo'])
   end
 
   def set_user(opts)
     @options[:user] ||= []
     opts.each do |usr|
       usr[:'#plain_password'] = usr[:password]
-      usr[:password] = KickstartConfig.crypt_pw(usr[:password])
+      usr[:password] = Kickstart::Config.crypt_pw(usr[:password])
       usr[:iscrypted] = true
 
       @options[:user] << usr if (usr[:name] =~ /^[a-z0-9\_\-]{3,}$/i)
@@ -105,23 +130,23 @@ class KickstartConfig
 
 
   def set_autopart(opts)
-    raise InvalidParameter unless ['lvm', 'btrfs', 'thinp', 'plain'].include?(opts['type'])
+    raise InvalidParameter unless OPTS_AUTOPART.include?(opts['type'])
     @options[:autopart] = { type: opts['type'] }
   end
 
   def set_bootloader(opts)
-    raise InvalidParameter unless ['mbr', 'partition', 'none'].include?(opts['location'])
+    raise InvalidParameter unless OPTS_BOOTLOADER.include?(opts['location'])
     @options[:bootloader] = { location: opts['location'] }
   end
 
   def set_firewall(opt)
-    raise InvalidParameter unless ['disabled', 'enabled'].include?(opt)
+    raise InvalidParameter unless OPTS_FIREWALL.include?(opt)
     @options[:firewall] ||= {}
     @options[:firewall][opt.to_sym] = true
   end
 
   def set_lang(opt)
-    raise InvalidParameter unless ['en_US', 'en_GB', 'de_DE', 'de_AT'].include?(opt)
+    raise InvalidParameter unless KNOWN_LANGUAGES.include?(opt)
     @options[:lang] = "#{opt}.UTF8"
   end
 
@@ -133,13 +158,11 @@ class KickstartConfig
   def set_timezone(opts)
     @options[:timezone] ||= {}
     @options[:timezone][:utc] = true if opts['utc'] == '1'
-    @options[:timezone][:_] = opts['_'] if ['America/New York',
-                                            'Europe/Vienna',
-                                            'US/Hawaii'].include?(opts['_'])
+    @options[:timezone][:_] = opts['_'] if KNOWN_TIMEZONES.include?(opts['_'])
   end
 
   def set_selinux(opt)
-    raise InvalidParameter unless ['enforcing', 'permissive', 'disabled'].include?(opt)
+    raise InvalidParameter unless OPTS_SELINUX.include?(opt)
     @options[:selinux] ||= {}
     @options[:selinux][opt.to_sym] = true
   end
@@ -149,7 +172,7 @@ class KickstartConfig
 
     @options[:rootpw] ||= {}
     @options[:rootpw][:iscrypted] = true
-    @options[:rootpw][:_] = KickstartConfig.crypt_pw(opt)
+    @options[:rootpw][:_] = Kickstart::Config.crypt_pw(opt)
     @options[:rootpw][:'#plain_password'] = opt
   end
 
@@ -173,6 +196,16 @@ class KickstartConfig
     end
   end
 
+  def set_pre(opt)
+    return if opt.empty?
+    @options[:pre] = opt
+  end
+
+  def set_post(opt)
+    return if opt.empty?
+    @options[:post] = opt
+  end
+
   def users
     ([ {name: 'root', password: @options[:rootpw][:'#plain_password']} ] +
      @options[:user].map { |u| { name: u[:name], password: u[:'#plain_password'] } } )
@@ -182,7 +215,11 @@ class KickstartConfig
     [ '# Kickstart Configuration',
       ks_options,
       '# Packages',
-      pkg_list
+      pkg_list,
+      '# Pre-install script',
+      ks_script(:pre),
+      '# Post-install script',
+      ks_script(:post)
     ].join("\n\n")
   end
 
@@ -228,6 +265,16 @@ class KickstartConfig
       ['']+
       @options[:pkg][:pkgs]+
       ['%end']).join("\n")
+  end
+
+  def ks_script(section)
+    raise InvalidParameter unless [:pre, :post].include?(section)
+    return '' if !@options[section] || @options[section].empty?
+
+    sec_cmd = section
+    sec_cmd = make_cmd(section, {log: '/root/ks-post.log'}) if section == :post
+
+    ["%#{sec_cmd}", @options[section]].join("\n")
   end
 
   class InvalidParameter < StandardError; end
