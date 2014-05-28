@@ -5,7 +5,20 @@
      {text:'LVM Thin Provisioning', value:'thinp'},
      {text:'Regular Partitions', value:'plain'}])
 
+= checkbox('no_autopart', 'Partition manually')
+
+:javascript
+  $('input[name="no_autopart"]').on('click', function() {
+    var elems = $('input[name="ks[autopart[type]]"]');
+    if( $(this).val() == 1 ) {
+      elems.prop('disabled', true);
+    } else {
+      elems.prop('disabled', false);
+    }
+  });
+
 = radio_group('ks[bootloader[location]]', 'Bootloader location',
     [{text:'MBR', value:'mbr', checked: true},
      {text:'Partition containing the kernel', value:'partition'},
      {text:"Don't install a bootloader", value:'none'}])
+
