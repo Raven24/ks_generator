@@ -8,9 +8,9 @@
 = checkbox('no_autopart', 'Partition manually')
 
 :javascript
-  $('input[name="no_autopart"]').on('click', function() {
+  $('input[type="checkbox"][name="no_autopart"]').on('click', function() {
     var elems = $('input[name="ks[autopart[type]]"]');
-    if( $(this).val() == 1 ) {
+    if( $(this).is(':checked') ) {
       elems.prop('disabled', true);
     } else {
       elems.prop('disabled', false);

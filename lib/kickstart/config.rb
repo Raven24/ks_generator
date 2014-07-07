@@ -50,7 +50,7 @@ class Kickstart::Config
 
   KNOWN_PKGS = [
     'wget','acpid','curl','vim','screen','mc','git','htop','openssh-clients',
-    'redis', 'mariadb-devel', 'nodejs', 'postfix'
+    'redis', 'mariadb-devel', 'nodejs', 'postfix', 'qemu-kvm', 'libvirt'
   ]
 
   KNOWN_TIMEZONES = [
