@@ -30,7 +30,7 @@ class Kickstart::Config
       include:'rpmfusion-nonfree-release'
     },
     epel: {
-      name: 'EPEL 7',
+      name: 'EPEL7',
       mirrorlist:'https://mirrors.fedoraproject.org/metalink?repo=epel-7&arch=$basearch',
       include:'epel-release-7'
     }
