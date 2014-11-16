@@ -29,6 +29,11 @@ class Kickstart::Config
       mirrorlist:'http://mirrors.rpmfusion.org/mirrorlist?repo=free-fedora-updates-released-$releasever&arch=$basearch',
       include:'rpmfusion-nonfree-release'
     },
+    epel: {
+      name: 'EPEL 7',
+      mirrorlist:'https://mirrors.fedoraproject.org/metalink?repo=epel-7&arch=$basearch',
+      include:'epel-release-7'
+    }
   }
 
   OPTS_SELINUX = ['enforcing', 'permissive', 'disabled']

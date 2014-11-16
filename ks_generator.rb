@@ -45,7 +45,8 @@ class KsGenerator < Sinatra::Base
 
     # specify install method 'url' pointing to the mirrorlist
     ks_params['url'] = {
-      'mirrorlist' => 'http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$releasever&arch=$basearch'
+      #'mirrorlist' => 'http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$releasever&arch=$basearch'
+      'mirrorlist' => 'http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=os'
     }
 
     # set root password
