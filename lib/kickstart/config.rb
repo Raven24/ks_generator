@@ -8,56 +8,6 @@ class Kickstart::Config
 
   OPTIONS = [:pkg, :pre, :post]
 
-  KNOWN_REPOS = {
-    rpmfusion_free: {
-      name:'RPMFusionFree',
-      mirrorlist:'http://mirrors.rpmfusion.org/mirrorlist?repo=free-fedora-$releasever&arch=$basearch',
-      include:'rpmfusion-free-release'
-    },
-    rpmfusion_free_updates: {
-      name:'RPMFusionFreeUpdates',
-      mirrorlist:'http://mirrors.rpmfusion.org/mirrorlist?repo=free-fedora-updates-released-$releasever&arch=$basearch',
-      include:'rpmfusion-free-release'
-    },
-    rpmfusion_nonfree: {
-      name:'RPMFusionNonFree',
-      mirrorlist:'http://mirrors.rpmfusion.org/mirrorlist?repo=nonfree-fedora-$releasever&arch=$basearch',
-      include:'rpmfusion-nonfree-release'
-    },
-    rpmfusion_nonfree_updates: {
-      name:'RPMFusionNonFreeUpdates',
-      mirrorlist:'http://mirrors.rpmfusion.org/mirrorlist?repo=free-fedora-updates-released-$releasever&arch=$basearch',
-      include:'rpmfusion-nonfree-release'
-    },
-    epel: {
-      name: 'EPEL7',
-      mirrorlist:'https://mirrors.fedoraproject.org/metalink?repo=epel-7&arch=$basearch',
-      include:'epel-release-7'
-    }
-  }
-
-  OPTS_SELINUX = ['enforcing', 'permissive', 'disabled']
-
-  OPTS_FIREWALL = ['disabled', 'enabled']
-
-  OPTS_BOOTLOADER = ['mbr', 'partition', 'none']
-
-  OPTS_AUTOPART = ['lvm', 'btrfs', 'thinp', 'plain']
-
-  OPTS_PASSALGO = ['sha256', 'sha512']
-
-  KNOWN_PKG_GROUPS = [
-    'c-development', 'development-tools', 'development-libs', 'firefox',
-    'ruby', 'python', 'perl', 'php', 'admin-tools', 'system-tools',
-    'kde-desktop', 'gnome-desktop', 'mysql', 'mongodb', 'standard',
-    'virtualization', 'sql-server'
-  ]
-
-  KNOWN_PKGS = [
-    'wget','acpid','curl','vim','screen','mc','git','htop','openssh-clients',
-    'redis', 'mariadb-devel', 'nodejs', 'postfix', 'qemu-kvm', 'libvirt'
-  ]
-
   KNOWN_TIMEZONES = [
     'Africa/Cairo', 'Africa/Dakar', 'Africa/Johannesburg', 'America/Chicago',
     'America/Costa_Rica', 'America/New York', 'Asia/Tokyo', 'Asia/Baghdad',
@@ -71,33 +21,57 @@ class Kickstart::Config
   ]
 
   class << self
-    def from_hash(opts)
+    def from_hash(opts, os_spec)
       Kickstart::Config.new do |ks|
+        ks.read_spec(os_spec)
+
         (ATTRIBUTES + OPTIONS).each do |attr|
           ks.send("set_#{attr}", opts[attr.to_s]) if opts.has_key?(attr.to_s)
         end
       end
     end
-
-    def crypt_pw(password)
-      salt = Util.generate_alnum_string(16)
-      password.crypt("$6$#{salt}")
-    end
-
-    def generate_root_pw(letters=6, digits=3)
-      Util.generate_pw_string(letters, digits)
-    end
-
-    def generate_user_pw(letters=5, digits=2)
-      Util.generate_pw_string(letters, digits)
-    end
   end
 
-  attr_accessor :options
+  attr_accessor :spec, :options
 
   def initialize
     @options = {}
+    @spec = {}
     yield self if block_given?
+  end
+
+  def read_spec(os_spec)
+    @spec[:passalgo] = os_spec['options'].detect { |o|
+      o['name'] == 'passalgo'
+    }['values'].map { |o| o['value'] }
+
+    @spec[:autopart] = os_spec['options'].detect { |o|
+      o['name'] == 'autopart'
+    }['values'].map { |o| o['value'] }
+
+    @spec[:bootloader] = os_spec['options'].detect { |o|
+      o['name'] == 'bootloader'
+    }['values'].map { |o| o['value'] }
+
+    @spec[:firewall] = os_spec['options'].detect { |o|
+      o['name'] == 'firewall'
+    }['values'].map { |o| o['value'] }
+
+    @spec[:selinux] = os_spec['options'].detect { |o|
+      o['name'] == 'selinux'
+    }['values'].map { |o| o['value'] }
+
+    @spec[:repos] = os_spec['repos'].each.with_object({}) { |r, hsh|
+      hsh[r['name'].to_sym] = {
+        name: r['name'],
+        mirrorlist: r['mirrorlist'],
+        include: r['include']
+      }
+    }
+
+    @spec[:pkg_groups] = os_spec['pkg_groups'].map { |g| g['value'] }
+
+    @spec[:pkgs] = os_spec['pkgs'].map { |p| p['value'] }
   end
 
   def set_install(opt)
@@ -113,14 +87,14 @@ class Kickstart::Config
   def set_auth(opts)
     @options[:auth] ||= {}
     @options[:auth][:useshadow] = true if opts['useshadow'] == '1'
-    @options[:auth][:passalgo] = opts['passalgo'] if OPTS_PASSALGO.include?(opts['passalgo'])
+    @options[:auth][:passalgo] = opts['passalgo'] if @spec[:passalgo].include?(opts['passalgo'])
   end
 
   def set_user(opts)
     @options[:user] ||= []
     opts.each do |usr|
       usr[:'#plain_password'] = usr[:password]
-      usr[:password] = Kickstart::Config.crypt_pw(usr[:password])
+      usr[:password] = Kickstart::PasswdUtil.crypt_pw(usr[:password])
       usr[:iscrypted] = true
 
       @options[:user] << usr if (usr[:name] =~ /^[a-z0-9\_\-]{3,}$/i)
@@ -135,17 +109,17 @@ class Kickstart::Config
 
 
   def set_autopart(opts)
-    raise InvalidParameter unless OPTS_AUTOPART.include?(opts['type'])
+    raise InvalidParameter unless @spec[:autopart].include?(opts['type'])
     @options[:autopart] = { type: opts['type'] }
   end
 
   def set_bootloader(opts)
-    raise InvalidParameter unless OPTS_BOOTLOADER.include?(opts['location'])
+    raise InvalidParameter unless @spec[:bootloader].include?(opts['location'])
     @options[:bootloader] = { location: opts['location'] }
   end
 
   def set_firewall(opt)
-    raise InvalidParameter unless OPTS_FIREWALL.include?(opt)
+    raise InvalidParameter unless @spec[:firewall].include?(opt)
     @options[:firewall] ||= {}
     @options[:firewall][opt.to_sym] = true
   end
@@ -167,7 +141,7 @@ class Kickstart::Config
   end
 
   def set_selinux(opt)
-    raise InvalidParameter unless OPTS_SELINUX.include?(opt)
+    raise InvalidParameter unless @spec[:selinux].include?(opt)
     @options[:selinux] ||= {}
     @options[:selinux][opt.to_sym] = true
   end
@@ -177,14 +151,14 @@ class Kickstart::Config
 
     @options[:rootpw] ||= {}
     @options[:rootpw][:iscrypted] = true
-    @options[:rootpw][:_] = Kickstart::Config.crypt_pw(opt)
+    @options[:rootpw][:_] = Kickstart::PasswdUtil.crypt_pw(opt)
     @options[:rootpw][:'#plain_password'] = opt
   end
 
   def set_repo(opts)
     @options[:repo] ||= []
     opts.each do |k,v|
-      @options[:repo] << KNOWN_REPOS[k.to_sym] if KNOWN_REPOS.has_key?(k.to_sym) &&
+      @options[:repo] << @spec[:repos][k.to_sym] if @spec[:repos].has_key?(k.to_sym) &&
                                                   v == '1'
     end
   end
@@ -192,11 +166,11 @@ class Kickstart::Config
   def set_pkg(opts)
     @options[:pkg] = { groups: [], pkgs: [] }
     opts['groups'].each do |grp,v|
-      next unless KNOWN_PKG_GROUPS.include?(grp)
+      next unless @spec[:pkg_groups].include?(grp)
       @options[:pkg][:groups] << grp if v == '1'
     end
     opts['pkgs'].each do |grp,v|
-      next unless KNOWN_PKGS.include?(grp)
+      next unless @spec[:pkgs].include?(grp)
       @options[:pkg][:pkgs] << grp if v == '1'
     end
   end

@@ -1,5 +1,6 @@
 require 'sinatra/base'
 
+require 'yaml'
 require 'i18n'
 require 'i18n/backend/fallbacks'
 require File.join(File.dirname(__FILE__), 'lib', 'ks_generator')
@@ -12,7 +13,9 @@ class KsGenerator < Sinatra::Base
     set :haml, format: :html5
     set :scss, views: File.join(settings.root, 'assets')
 
-    helpers Helpers::Form, Helpers::Snippet
+    set :default_os, 'centos_7'
+
+    helpers Helpers::Form, Helpers::Snippet, Helpers::Os
 
     I18n::Backend::Simple.send(:include, I18n::Backend::Fallbacks)
     I18n.load_path = Dir[File.join(settings.root, 'locales', '*.yml')]
@@ -22,6 +25,10 @@ class KsGenerator < Sinatra::Base
 
   configure(:development) do
     set :session_secret, 'test_devel_secret_very_mysterious_and_classified'
+  end
+
+  not_found do
+    haml :'404', layout: :main_layout
   end
 
   get '/assets/:name.:ext' do |name, ext|
@@ -34,10 +41,12 @@ class KsGenerator < Sinatra::Base
   end
 
   get '/' do
+    @os = os_config
     haml :index, layout: :main_layout
   end
 
   post '/create' do
+    os = os_config
     ks_params = params[:ks]
 
     # set to install mode
@@ -45,12 +54,11 @@ class KsGenerator < Sinatra::Base
 
     # specify install method 'url' pointing to the mirrorlist
     ks_params['url'] = {
-      #'mirrorlist' => 'http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$releasever&arch=$basearch'
-      'mirrorlist' => 'http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=os'
+      'mirrorlist' => os['mirrorlist']
     }
 
     # set root password
-    ks_params['rootpw'] = Kickstart::Config.generate_root_pw
+    ks_params['rootpw'] = Kickstart::PasswdUtil.generate_root_pw
 
     # configure what to do with existing partitions
     ks_params['clearpart'] = {
@@ -60,10 +68,10 @@ class KsGenerator < Sinatra::Base
 
     # process users
     ks_params['user'] = params[:auth][:users].split("\n").map do |u|
-      {name: u.strip, password: Kickstart::Config.generate_user_pw }
+      {name: u.strip, password: Kickstart::PasswdUtil.generate_user_pw }
     end
 
-    ks = Kickstart::Config.from_hash(ks_params)
+    ks = Kickstart::Config.from_hash(ks_params, os)
     uid = Storage.next_uid
 
     Storage.set(uid, ks)
@@ -80,7 +88,7 @@ class KsGenerator < Sinatra::Base
   end
 
   get '/:uid' do |uid|
-    ks = Storage.get(uid)
+    ks = Storage.get(uid) rescue halt(404)
 
     haml :show, layout: :main_layout, locals: {
       ks: ks.to_ks,

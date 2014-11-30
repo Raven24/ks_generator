@@ -1,0 +1,35 @@
+---
+name: "Fedora 20 (x86_64)"
+mirrorlist: "http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-20&arch=x86_64"
+ks_docs: ""
+ks_pre_docs: "https://docs.fedoraproject.org/en-US/Fedora/20/html/Installation_Guide/s1-kickstart2-preinstallconfig.html"
+ks_post_docs: "https://docs.fedoraproject.org/en-US/Fedora/20/html/Installation_Guide/s1-kickstart2-postinstallconfig.html
+
+
+  KNOWN_REPOS = {
+    rpmfusion_free: {
+      name:'RPMFusionFree',
+      mirrorlist:'http://mirrors.rpmfusion.org/mirrorlist?repo=free-fedora-$releasever&arch=$basearch',
+      include:'rpmfusion-free-release'
+    },
+    rpmfusion_free_updates: {
+      name:'RPMFusionFreeUpdates',
+      mirrorlist:'http://mirrors.rpmfusion.org/mirrorlist?repo=free-fedora-updates-released-$releasever&arch=$basearch',
+      include:'rpmfusion-free-release'
+    },
+    rpmfusion_nonfree: {
+      name:'RPMFusionNonFree',
+      mirrorlist:'http://mirrors.rpmfusion.org/mirrorlist?repo=nonfree-fedora-$releasever&arch=$basearch',
+      include:'rpmfusion-nonfree-release'
+    },
+    rpmfusion_nonfree_updates: {
+      name:'RPMFusionNonFreeUpdates',
+      mirrorlist:'http://mirrors.rpmfusion.org/mirrorlist?repo=free-fedora-updates-released-$releasever&arch=$basearch',
+      include:'rpmfusion-nonfree-release'
+    },
+    epel: {
+      name: 'EPEL7',
+      mirrorlist:'https://mirrors.fedoraproject.org/metalink?repo=epel-7&arch=$basearch',
+      include:'epel-release-7'
+    }
+  }

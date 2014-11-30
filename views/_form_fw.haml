@@ -1,4 +1,2 @@
 
-= radio_group('ks[firewall]', 'Firewall',
-    [{text:'Enabled', value:'enabled'},
-     {text:'Disabled', value:'disabled', checked: true}])
+= firewall_opts('ks[firewall]', @os['options'].detect{ |o| o['name'] == 'firewall' })

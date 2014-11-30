@@ -7,6 +7,4 @@
 
 = checkbox('ks[auth[useshadow]]', 'Use shadow passwords', true)
 
-= radio_group('ks[auth[passalgo]]', 'Hashing algorithm',
-    [{text: 'SHA-256', value: 'sha256'},
-     {text: 'SHA-512', value: 'sha512', checked: true}])
+= passalgo_opts('ks[auth[passalgo]]', @os['options'].detect {|o| o['name'] == 'passalgo' })

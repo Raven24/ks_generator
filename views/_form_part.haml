@@ -1,9 +1,5 @@
 
-= radio_group('ks[autopart[type]]', 'Automatic partition scheme',
-    [{text:'LVM', value:'lvm'},
-     {text:'BtrFS', value:'btrfs', checked: true},
-     {text:'LVM Thin Provisioning', value:'thinp'},
-     {text:'Regular Partitions', value:'plain'}])
+= autopart_opts('ks[autopart[type]]', @os['options'].detect {|o| o['name'] == 'autopart' })
 
 = checkbox('no_autopart', 'Partition manually')
 
@@ -17,8 +13,5 @@
     }
   });
 
-= radio_group('ks[bootloader[location]]', 'Bootloader location',
-    [{text:'MBR', value:'mbr', checked: true},
-     {text:'Partition containing the kernel', value:'partition'},
-     {text:"Don't install a bootloader", value:'none'}])
+= bootloader_opts('ks[bootloader[location]]', @os['options'].detect {|o| o['name'] == 'bootloader' } )
 

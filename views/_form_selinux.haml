@@ -1,5 +1,2 @@
 
-= radio_group('ks[selinux]', 'SELinux state',
-    [{text:'Enforcing', value:'enforcing'},
-     {text:'Permissive', value:'permissive'},
-     {text:'Disabled', value:'disabled', checked: true}])
+= selinux_opts('ks[selinux]', @os['options'].detect {|o| o['name'] == 'selinux' })
