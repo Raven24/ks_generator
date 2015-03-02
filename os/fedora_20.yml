@@ -1,7 +1,7 @@
 ---
 name: "Fedora 20 (x86_64)"
 mirrorlist: "http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-20&arch=x86_64"
-ks_docs: ""
+ks_docs: "https://docs.fedoraproject.org/en-US/Fedora/20/html/Installation_Guide/ch-kickstart2.html"
 ks_pre_docs: "https://docs.fedoraproject.org/en-US/Fedora/20/html/Installation_Guide/s1-kickstart2-preinstallconfig.html"
 ks_post_docs: "https://docs.fedoraproject.org/en-US/Fedora/20/html/Installation_Guide/s1-kickstart2-postinstallconfig.html
 
