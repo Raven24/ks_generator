@@ -1,9 +1,16 @@
 
 module Helpers::Os
+  def selected_os
+    params[:os] || settings.default_os
+  end
+
   def os_config
-    os = params[:os] || settings.default_os
-    file = File.join(settings.root, 'os', "#{os}.yml")
+    file = File.join(settings.root, 'os', "#{selected_os}.yml")
     Kickstart::OS.read_spec(file)
+  end
+
+  def os_opt
+    haml "%input{type: :hidden, name: 'os', value: '#{selected_os}'}"
   end
 
   def passalgo_opts(name, data)
