@@ -42,6 +42,7 @@ class KsGenerator < Sinatra::Base
 
   get '/' do
     @os = os_config
+    @version = Kickstart::Version.new @os['ks_ver']
     haml :index, layout: :main_layout
   end
 
@@ -70,6 +71,14 @@ class KsGenerator < Sinatra::Base
     ks_params['user'] = params[:auth][:users].split("\n").map do |u|
       {name: u.strip, password: Kickstart::PasswdUtil.generate_user_pw }
     end
+
+    # process ssh keys
+    ks_params['sshkey'] = params[:auth][:sshkeys].split("\n").map do |k|
+      parts = k.split(" ", 2).map(&:strip)
+      # maps to nil, compact later
+      next unless ks_params['user'].detect {|u| u[:name] == parts[0] }
+      {username: parts[0], _: parts[1]}
+    end.compact
 
     ks = Kickstart::Config.from_hash(ks_params, os)
     uid = Storage.next_uid

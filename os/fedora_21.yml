@@ -4,6 +4,7 @@ mirrorlist: "http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-21&arch=x86
 ks_docs: "https://docs.fedoraproject.org/en-US/Fedora/21/html/Installation_Guide/chap-kickstart-installations.html"
 ks_pre_docs: "https://docs.fedoraproject.org/en-US/Fedora/21/html/Installation_Guide/sect-kickstart-preinstall.html"
 ks_post_docs: "https://docs.fedoraproject.org/en-US/Fedora/21/html/Installation_Guide/sect-kickstart-postinstall.html"
+ks_ver: "F21"
 
 repos:
   - name: "rpmfusion-free"

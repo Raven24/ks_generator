@@ -2,8 +2,8 @@
 class Kickstart::Config
 
   ATTRIBUTES = [
-    :install, :url, :auth, :user, :clearpart, :autopart, :bootloader, :firewall,
-    :lang, :keyboard, :timezone, :selinux, :rootpw, :repo
+    :install, :url, :auth, :user, :sshkey, :clearpart, :autopart, :bootloader,
+    :firewall, :lang, :keyboard, :timezone, :selinux, :rootpw, :repo
   ]
 
   OPTIONS = [:pkg, :pre, :post]
@@ -41,6 +41,8 @@ class Kickstart::Config
   end
 
   def read_spec(os_spec)
+    @version = Kickstart::Version.new os_spec['ks_ver']
+
     @spec[:passalgo] = os_spec['options'].detect { |o|
       o['name'] == 'passalgo'
     }['values'].map { |o| o['value'] }
@@ -93,11 +95,25 @@ class Kickstart::Config
   def set_user(opts)
     @options[:user] ||= []
     opts.each do |usr|
-      usr[:'#plain_password'] = usr[:password]
-      usr[:password] = Kickstart::PasswdUtil.crypt_pw(usr[:password])
-      usr[:iscrypted] = true
+      next unless usr[:name] =~ /^[a-z0-9\_\-]{3,}$/i
 
-      @options[:user] << usr if (usr[:name] =~ /^[a-z0-9\_\-]{3,}$/i)
+      @options[:user] << usr.tap do |u|
+        u[:'#plain_password'] = u[:password]
+        u[:password] = Kickstart::PasswdUtil.crypt_pw(u[:password])
+        u[:iscrypted] = true
+      end
+    end
+  end
+
+  def set_sshkey(opts)
+    raise VersionMismatch unless @version.at_least?("F22")
+    @options[:sshkey] ||= []
+    opts.each do |key|
+      @options[:sshkey] << key.tap do |k|
+        unless k[:_].start_with?('"') && k[:_].end_with?('"')
+          k[:_] = '"' + k[:_] + '"'
+        end
+      end
     end
   end
 
@@ -158,8 +174,11 @@ class Kickstart::Config
   def set_repo(opts)
     @options[:repo] ||= []
     opts.each do |k,v|
-      @options[:repo] << @spec[:repos][k.to_sym] if @spec[:repos].has_key?(k.to_sym) &&
-                                                  v == '1'
+      next unless @spec[:repos].has_key?(k.to_sym) &&
+                  v == '1'
+      @options[:repo] << @spec[:repos][k.to_sym].tap do |repo|
+        repo[:install] = true
+      end
     end
   end
 
@@ -260,5 +279,9 @@ class Kickstart::Config
      '%end'].join("\n")
   end
 
-  class InvalidParameter < StandardError; end
+  private
+
+  class KickstartError < RuntimeError; end
+  class InvalidParameter < KickstartError; end
+  class VersionMismatch < KickstartError; end
 end
